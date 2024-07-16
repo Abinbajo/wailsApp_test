@@ -4,51 +4,54 @@ import (
 	"context"
 	"log"
 	"os"
-
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"github.com/getlantern/systray"
 )
 
-// App is the main application structure
-type App struct{}
 
-// NewApp creates a new instance of App
+type App struct {
+	ctx context.Context
+}
+
 func NewApp() *App {
 	return &App{}
 }
 
-// startup initializes the system tray icon and menu.
 func (a *App) startup(ctx context.Context) {
-	// Initialize the systray
-	systray.Run(onReady, func() {})
+	a.ctx = ctx
+	go systray.Run(a.onReady, a.onExit)
 }
 
-func onReady() {
-	// Load the .ico file
-	icon, err := LoadIcon("icon.ico") // Ensure this path is correct
+func (a *App) onReady() {
+	icon, err := LoadIcon("assets/image/icon.ico") 
 	if err != nil {
 		log.Fatalf("Failed to load icon: %v", err)
 		return
 	}
 
-	// Set the tray icon
 	systray.SetIcon(icon)
-	// Set the tray icon's tooltip
+
 	systray.SetTooltip("Sticky Note Application")
 
-	// Add menu items
 	mQuit := systray.AddMenuItem("Quit", "Quit the application")
 
-	// Handle menu item clicks
 	go func() {
-		for range mQuit.ClickedCh{
+		for range mQuit.ClickedCh {
 			systray.Quit()
+			a.CloseWindow()
 		}
 	}()
 }
 
-// LoadIcon loads the .ico file from the specified path
+func (a *App) onExit() {
+	
+}
+
+func (a *App) CloseWindow() {
+	runtime.Quit(a.ctx)
+}
+
 func LoadIcon(path string) ([]byte, error) {
-	// Read the .ico file content
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

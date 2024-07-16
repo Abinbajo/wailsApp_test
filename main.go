@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"stickyNote/controllers"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
@@ -13,19 +14,29 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+
+
 func main() {
 	// Initialize the Gin router
 	router := gin.Default()
 
 	// Configure CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://your-frontend-url"},  // Replace with your actual frontend URL
+		AllowOrigins: []string{"http://10.10.83:5000"},  
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "API-Key"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "x-api-key"},
 	}))
 
 	// Define routes
 	router.POST("/api/login", controllers.Login())
+	router.POST("/api/signup", controllers.SignUp())
+
+	// Run the Gin server in a separate goroutine
+	go func() {
+		if err := router.Run(":8081"); err != nil {
+			fmt.Printf("Failed to run Gin server: %v\n", err)
+		}
+	}()
 
 	// Create an instance of the app structure
 	app := NewApp()
